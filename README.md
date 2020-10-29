@@ -15,6 +15,14 @@ Run the program from the root directory:
 python ./src/main.py
 ```
 
+## Loading Training Data
+
+If you would like to run the notebooks and/or continue model development, you will need to download the training data separately and place it in the `./data/` directory:
+
+1. Visit the Kaggle website and download [the leapgestercog dataset](https://www.kaggle.com/gti-upm/leapgestrecog)
+
+2. Move the downloaded dataset into the project: `mv ~/Downloads/leapGestRecog ./data`
+
 ## Implementation Details
 
 At the highest level, this application consists of a web cam run loop where each iteration of the loop, the web cam pull a new image frame which is then processed for gesture recogition. The image pipeline is described bellow.
