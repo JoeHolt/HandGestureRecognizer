@@ -19,7 +19,7 @@ python ./src/main.py
 
 If you would like to run the notebooks and/or continue model development, you will need to download the training data separately and place it in the `./data/` directory:
 
-1. Visit the Kaggle website and download [the leapgestercog dataset](https://www.kaggle.com/gti-upm/leapgestrecog)
+1. Visit the Kaggle website and download [the Hand Gesture Recognition Database](https://www.kaggle.com/gti-upm/leapgestrecog)
 
 2. Move the downloaded dataset into the project: `mv ~/Downloads/leapGestRecog ./data`
 
