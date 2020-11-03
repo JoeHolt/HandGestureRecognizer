@@ -36,7 +36,7 @@ class HandReader:
         Transforms image into BW
         """
         img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        img_bw = cv2.threshold(img_gray, 127, 255, cv2.THRESH_BINARY)[1]
+        img_bw = cv2.threshold(img_gray, 200, 255, cv2.THRESH_BINARY)[1]
         return img_bw
         
     def _readImage(self, path, process=True):
