@@ -3,10 +3,14 @@ import numpy as np
 import cv2
 from HandReader import HandReader
 from DispTools import applySubImage, applyStatusText
+from ModelWrapper import GestureRecognizer
 
 # image stream from web cam
 cap = cv2.VideoCapture(0)
 reader = HandReader()
+
+# load model
+model = GestureRecognizer()
 
 # track curr frame
 frame_n = 0
@@ -25,13 +29,14 @@ while(True):
     mask = reader.createMask(frame)
     mask = cv2.merge((mask, mask, mask))
 
+    # get prediction
+    pred_class, pred_acc = model.predict(frame)
+
     # apply mask to sub image slot
     applySubImage(frame, mask)
 
     # apply status from model
-    preds = ['ok', 'c', 'palm', 'none']
-    accs = [0.9922, 0.8812, 0.2123, 0.1112]
-    applyStatusText(frame, preds, accs, frame_n)
+    applyStatusText(frame, pred_class[:4], pred_acc[:4], frame_n)
 
     # Display the resulting frame
     cv2.imshow('Hand Gesture Recognition - v0.3.9', frame) # mask )
