@@ -2,12 +2,17 @@
 import numpy as np
 import cv2
 from HandReader import HandReader
+from DispTools import applySubImage, applyStatusText
 
 # image stream from web cam
 cap = cv2.VideoCapture(0)
 reader = HandReader()
 
+# track curr frame
+frame_n = 0
+
 while(True):
+
     # Capture frame-by-frame
     ret, frame = cap.read()
 
@@ -15,25 +20,24 @@ while(True):
     if not reader.baseImageSet():
         reader.setBaseImage(frame)
         continue
-        
+
     # get the mask for the current frame
     mask = reader.createMask(frame)
     mask = cv2.merge((mask, mask, mask))
 
-    # write text
-    font                   = cv2.FONT_HERSHEY_SIMPLEX
-    bottomLeftCornerOfText = (10,600)
-    bottomLeftCornerOfText2 = (10,650)
-    fontScale              = 1
-    fontColor              = (0,255,0)
-    lineType               = 2
+    # apply mask to sub image slot
+    applySubImage(frame, mask)
 
-    cv2.putText(mask, 'Prediction: ok', bottomLeftCornerOfText, font, fontScale, fontColor, lineType)
-    cv2.putText(mask, 'Accuracy: 0.52', bottomLeftCornerOfText2, font, fontScale, fontColor, lineType)
-
+    # apply status from model
+    preds = ['ok', 'c', 'palm', 'none']
+    accs = [0.9922, 0.8812, 0.2123, 0.1112]
+    applyStatusText(frame, preds, accs, frame_n)
 
     # Display the resulting frame
-    cv2.imshow('CS 639 - Predicting Gestures', mask)
+    cv2.imshow('Hand Gesture Recognition - v0.3.9', frame) # mask )
+
+    # update values
+    frame_n += 1
 
     # check for exit
     if cv2.waitKey(1) & 0xFF == ord('q'):
