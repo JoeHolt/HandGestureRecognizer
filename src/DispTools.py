@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 
 
-def applySubImage(frame, img, ratio=0.3):
+def applySubImage(frame, img, resize=True, ratio=0.3):
     """
     Draws the passed image to the bottom right square of the displayed frame
 
@@ -13,10 +13,15 @@ def applySubImage(frame, img, ratio=0.3):
     """
 
     # place mask in bottom right corner
+    mask_small = img
+    new_size = img.shape
     frame_height = frame.shape[0]
     frame_width = frame.shape[1]
-    new_size = (int(frame_width*ratio), int(frame_height*ratio))
-    mask_small = cv2.resize(img, new_size) #, interpolation = cv2.INTER_AREA) 
+
+    if resize:
+        new_size = (int(frame_width*ratio), int(frame_height*ratio))
+        mask_small = cv2.resize(img, new_size) #, interpolation = cv2.INTER_AREA) 
+
 
     # apply small image
     frame[frame_height-new_size[1]:frame_height, frame_width-new_size[0]:frame_width] = mask_small   
