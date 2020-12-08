@@ -1,12 +1,12 @@
 ## CS 639 Semester Project - Hand Gesture Recognition
 
-Over the course of the past semester, I have been working to build a Hand Gesture Recognition application. The application uses computer vision technique we learned about in the course to segment a webcam stream and make a prediction based on the segmented images. In the current build, the application takes a webcam stream as input and then attempts to guess a hand gesture within the image stream. Based on said image, it will preform various actions on the computer (such as increasing the volume). This web page discusses the motivation, approach, implementation, result and problems encountered while working on the project. Feel free to email me with any questions or concerns.
+Over the course of the past semester, I have been working to build a Hand Gesture Recognition application. The application uses computer vision techniques we learned about in the course to segment a webcam stream and make a gesturee prediction based on the segmented images. In the current build, the application takes a webcam stream as input and then attempts to guess a hand gesture within the image stream. Based on said image, it will preform various actions on the computer (such as increasing the volume). This web page discusses the motivation, approach, implementation, result and problems encountered while working on the project. Feel free to email me with any questions or concerns.
 
 ### Motivation
 
-The primary reason I choose this topic is because I am interested in how artificial intelligence and computer vision can be used to make computers more accessible to those with disabilities that don't allow them to interact with a computer in the traditional way we expect (ie mouse and keyboard). While the current version of the project only works with common hand gestures, my goal was to make it expandable such that one day those with disabilities will be able to use it.
+The primary reason I choose this topic is because I am interested in how artificial intelligence and computer vision can be used to make computers more accessible to those with disabilities that don't allow them to interact with a computer in the traditional way we expect (ie mouse and keyboard). While the current version of the project only works with common hand gestures, my goal long term was to make it expandable such that one day those with disabilities will be able to use it.
 
-On top of this reason, I also picked this topic because I thought it would be a great opportunity to work with a variety of machine learning and computer vision topics we learned about over the course of the semester, including but not limited to:
+On top of this, I also picked this topic because I thought it would be a great opportunity to work with a variety of machine learning and computer vision topics we learned about over the course of the semester, including but not limited to:
 
 - Image Segmantion
 - Object recognition
@@ -23,7 +23,7 @@ My approach involved a variety of steps:
 4. Run the user's hand through a model trained to classify the gesture on the hand
 5. Interpret the model results and preform an action based on the results
 
-The implementation section of this site goes into more detail on how each of these steps works. At a high level, the image segmentation process uses a binary mask against a static background grabbed from the initial frame, and the model is a CNN train on data from the Kaggle Hand Gesture Recognition dataset. 
+The implementation section of this site goes into more detail on how each of these steps works. At a high level, the image segmentation process uses a binary mask against a static background grabbed from the initial frame, and the model is a pre-trained ResNet model trainsfer trained on data from the Kaggle Hand Gesture Recognition dataset. 
 
 ### Implementation
 
@@ -37,18 +37,34 @@ The image segmentation process uses a relatively simple binary mask system and w
 2. The segmenter saves the first frame that comes through the webcam stream for later use
 3. On each frame following the first frame, the segmenter creates a binary mask by 'subtracting' the initial frame from the most recent frame
 4. To do this, the image is translated to grayscale, and then to logical values based on a threshold value
-5. This resulting mask is then cropped and resized to a size our model expects
+5. Apply the mask to the origional picture, masking out the background and replacing it with black
+6. This masked image is then resized and ran through the model
+7. A preview of this image can be seen in the bottom right corner of the application
 
 This method works but comes with a variety of drawbacks. Most notably, it is prone to noise and if the camera moves the segmentation is ruined until the application is restarted. Over the summer I hope to improve the segmentation algorithm and make it more robust. Long term, I hope to get this running on a smartphone camera.
 
 #### Model / Image Prediction 
 
-##### Model V1
-The initial model I took was a basic CNN. **[TODO: More model info]** The model was trained on the Kaggle Hand Gesture Recognition dataset, with each image in the set being ran through our image segmentor (with a black static image) and resized to a usable size. The model provided the following results:
+##### Model V1 - Simple CNN
+The initial model I took was a basic. The model was trained on the Kaggle Hand Gesture Recognition dataset, with each image in the set being ran through our image segmentor (with a black static image) and resized to a usable size. The model was relatively simple, made up of 2 convolution layers and 3 fully connected layers. The model provided the following results:
 
-##### Model V2 - Transfer Learning from ResNet
+![v1-results](https://github.com/JoeHolt/HandGestureRecognizer/raw/main/mid-semester/curr_results.png)
 
-TODO
+These results were not great, with an average accuracy around 42%. The movement based classes also had 0% accuracy. When deploying this model to my application, the results were even worse, the model seemed to guess that every single gesture available was an l or thumb. After looking at these results, I knew I need to improve my approach.
+
+##### Model V2 - Deep Learning + Better Data
+
+After the failure of my first model, I looked more at the current state of the art approaches to see if I could learn something from them (more info on this at the bottom of this page). I found that deep learning based models tended to preform significantly better than any of the other approaches. So, with this in mind, I decided I would attempt to transfer train a ResNet-18 model on a similar dataset to that in the first version of the model. I downloaded the pre-trained resnet-18 from torchvision. Once I had the model, I changed the final layer to a simple fully connected linear layer that condensed the outputs to 8 classes. I picked ResNet because I used it over the summer at an internship and had good results with it. 
+
+The primary change I made within the dataset was to completely removing the 'moving' gestures as this was not something we cared about. Another change I did was, when loading the data, to transform each train data item via random rotation. The idea behind this was that my recognizer could be having trouble due to all hand gestures in the training set being in a similar/set orientation. 
+
+Once I picked my new model and preped my dataset, I trained the model. Unfortunately, I was heavily bounded by computer power so this took ~21 hours for 25 epochs of training with my laptop. After training the model, I saw much better accuracies than before (accuracy over 1004 test images, similar to before, but with 2 less classes):
+
+![v2-results](https://github.com/JoeHolt/HandGestureRecognizer/raw/model-testing/docs/imgs/resnet_acc.png)
+
+As you can see, for nearly every class we had accuracy over 70% and an overall accuracy over 80%. I believe I could have squeezed a little more accuracy out of this model by training for 20-30 more epochs, but I did not have the computer power necessary. I plan on improving this at some point in the spring once i have access to a GPU.
+
+The model was trained using Stochastic Gradient Descent with momentum, Cross Entropy Loss and a learning rate schedueler. 
 
 #### Computer Actions 
 The computer actions portion of the project was relatively simple. For each frame ran through the model, the applation either performed and action or didnt. The application preformed and action if the following conditions were met:
@@ -64,10 +80,7 @@ For my presentation, I implemented two gesture actions, but more could easily be
 The actions were carried out with the help of the AppleScript and the associated python library. 
 
 ### Results
-My applicaiton ended up working with the following stats...
-
-
-Here is my presentation video....
+For a live look at the resulting application, take a look at my video presentation bellow:
 
 
 ### Current State of the Art
