@@ -1,9 +1,10 @@
 # runs the gesture recognition program for my CS 639 project
 import numpy as np
 import cv2
-from HandReader import HandReader
+from HandReaderV2 import HandReader
 from DispTools import applySubImage, applyStatusText
 from ModelWrapper import GestureRecognizer
+from ComputerInteraction import ComputerInteraction 
 
 # image stream from web cam
 cap = cv2.VideoCapture(0)
@@ -11,8 +12,12 @@ reader = HandReader()
 
 # load model
 model = GestureRecognizer()
+computer = ComputerInteraction()
 
-# track curr frame
+# track curr frame - we only process every n frames for better FPS
+process_every = 5 # process every nth frame
+pred_class = []
+pred_acc = []
 frame_n = 0
 
 while(True):
@@ -26,14 +31,16 @@ while(True):
         continue
 
     # get the mask for the current frame
-    mask = reader.createMask(frame)
-    mask = cv2.merge((mask, mask, mask))
+    segment = reader.segmentImage(frame)
+    # segment = cv2.merge((segment, segment, segment))
 
-    # get prediction
-    pred_class, pred_acc = model.predict(frame)
+    if frame_n % process_every == 0:
+        # update prediction
+        pred_class, pred_acc = model.predict(frame)
+        computer.add_prediction(pred_class, pred_acc)
 
     # apply mask to sub image slot
-    applySubImage(frame, mask)
+    applySubImage(frame, segment)
 
     # apply status from model
     applyStatusText(frame, pred_class[:4], pred_acc[:4], frame_n)
