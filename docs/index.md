@@ -84,6 +84,8 @@ For a live look at the resulting application, take a look at my video presentati
 
 {% include wiscPlayer.html %}
 
+[Video Link (hosted on cs site)](http://pages.cs.wisc.edu/~holt/demo1080.mp4)
+
 ### Future Work
 
 Going forward there a variety of improvements I would like to make. 
