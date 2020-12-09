@@ -82,6 +82,7 @@ The actions were carried out with the help of the AppleScript and the associated
 ### Results
 For a live look at the resulting application, take a look at my video presentation bellow:
 
+{% include wiscPlayer.html %}
 
 ### Future Work
 
