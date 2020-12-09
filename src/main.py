@@ -1,7 +1,7 @@
 # runs the gesture recognition program for my CS 639 project
 import numpy as np
 import cv2
-from time import sleep
+from time import sleep, time
 from HandReaderV3 import HandReader
 from DispTools import applySubImage, applyStatusText
 from ModelWrapper import GestureRecognizer
@@ -11,6 +11,7 @@ from copy import copy
 # image stream from web cam
 cap = cv2.VideoCapture(0)
 read_hand_region = (10, 240, 236, 466) # t r b l
+read_hand_rect_pos = (10, 540, 236, 766) # t r b l
 reader = HandReader(read_hand_region)
 
 # load model
@@ -25,17 +26,24 @@ frame_n = 0
 
 while(True):
 
+    if frame_n == 30:
+        print("[DEBUG] Calibration Complete")
+
     # Capture frame-by-frame
     ret, frame = cap.read()
 
     # get the mask for the current frame
+    start = time()
     segment = reader.process(copy(frame))
     if segment is not None:
+        print("[DEBUG] Segmentation time (frame: {}): {}s".format(frame_n, time() - start))
         segment = cv2.merge((segment, segment, segment))
 
     if frame_n % process_every == 0 and segment is not None and reader.isCalibrated():
         # update prediction
+        start = time()
         pred_class, pred_acc = model.predict(segment)
+        print("[DEBUG] Prediction Time (frame: {}): {}s".format(frame_n, time() - start))
         computer.add_prediction(pred_class, pred_acc)
 
     # apply mask to sub image slot
@@ -48,10 +56,10 @@ while(True):
     applyStatusText(frame, pred_class[:4], pred_acc[:4], frame_n)
 
     # draw the ROI rectangle
-    left = read_hand_region[3]
-    top = read_hand_region[0]
-    right = read_hand_region[1]
-    bottom = read_hand_region[2]
+    left = read_hand_rect_pos[3]
+    top = read_hand_rect_pos[0]
+    right = read_hand_rect_pos[1]
+    bottom = read_hand_rect_pos[2]
     color = (0,255,0) if reader.isCalibrated() else (0,0,255)
     cv2.rectangle(frame, (left, top), (right, bottom+100), color, 2)
 
