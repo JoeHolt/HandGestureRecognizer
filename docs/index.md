@@ -90,9 +90,9 @@ I choose to keep the BW images because this would be very similar to the output 
 **Model**
 For my model, I choose to transfer-train the pre-trained torchvision ResNet-18 model. I had used a model similar to this over the summer for a project, and thought it would be a good fit here. Ideally I would have used a deeper ResNet model, but I was heavily compute-bound due to the limited power of my laptop (and it's lack of a cuda-GPU). 
 
-After downloading the model, I frooze the parameters of all the layers except the last. For the last layer, I choose a simple linear fully connected layer mapping the classifier to the 8 potential output classes. Once my model was setup, I began training. Due to my limited compute power, I was only able to train for 25 epochs (which took 25 hours). The model was trained using Stochastic Gradient Descent with momentum, Cross Entropy Loss and a learning rate schedueler. My results on the 1004-image test set can be seen bellow:
+After downloading the model, I frooze the parameters of all the layers except the last. For the last layer, I choose a simple linear fully connected layer mapping the classifier to the 8 potential output classes. Once my model was setup, I began training. Due to my limited compute power, I was only able to train for 25 epochs (which took 25 hours). The model was trained using Stochastic Gradient Descent with momentum, Cross Entropy Loss and a learning rate schedueler. My results on the test set can be seen bellow:
 
-![v2-results](https://github.com/JoeHolt/HandGestureRecognizer/raw/model-testing/docs/imgs/resnet_acc.png)
+![v2-results](https://github.com/JoeHolt/HandGestureRecognizer/raw/main/docs/imgs/resnet_acc.png)
 
 As you can see, for nearly every class we had accuracy over 70% and an overall accuracy over 80%. I believe I could have squeezed a little more accuracy out of this model by training for 20-30 more epochs.
 
