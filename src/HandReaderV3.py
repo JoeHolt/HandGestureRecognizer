@@ -58,7 +58,6 @@ class HandReader:
                 # get vals
                 (thresholded, segmented) = hand
                 # draw the segmented region and display the frame
-                cv2.drawContours(clone, [segmented + (self.right, self.top)], -1, (0, 0, 255))
                 thesholded_ret = thresholded
 
         # increment the number of frames
