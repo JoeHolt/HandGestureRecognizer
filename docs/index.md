@@ -118,7 +118,11 @@ I am super happy with how my final product turned out. The application meets all
 - When an action is performed, you can hear the music in the background change (audio is from a speaker linked to computer audio)
 - When an action is performed, the user is notified of the action via a notification in the top right of the screen
 
-[Video Link (dont forget to turn sound on!)](http://pages.cs.wisc.edu/~holt/demo1080.mp4)
+[Application Demo Link (dont forget to turn sound on!)](http://pages.cs.wisc.edu/~holt/demo1080.mp4)
+
+I have also included a link to the presentation I gave the class on 12/10. See the link bellow.
+
+[Presentation Video](http://pages.cs.wisc.edu/~holt/PresentationFinal.mp4)
 
 ### Future Work
 
