@@ -6,10 +6,10 @@ class ComputerInteraction():
     def __init__(self):
         self.predictions = []
         self.accs = []
-        self.action_threshold = 8
+        self.action_threshold = 6
         self.action_handlers = {
             'ok': self.handle_ok,
-            'fist': self.handle_fist
+            'l': self.handle_fist
         }
 
     def add_prediction(self, preds, accs):
@@ -40,10 +40,10 @@ class ComputerInteraction():
 
     def handle_ok(self, acc):
         self.sendNotification('OK', acc)
-        self.setVolume(100)
+        self.setVolume(75)
 
     def handle_fist(self, acc):
-        self.sendNotification('Fist', acc)
+        self.sendNotification('L', acc)
         self.setVolume(0)
 
     def setVolume(self, percent):

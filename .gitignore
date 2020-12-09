@@ -4,3 +4,4 @@ data/*
 test/.ipynb_checkpoints/*
 test/__pycache__/*
 test/data/*
+*.mp4
