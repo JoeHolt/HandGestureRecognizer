@@ -1,10 +1,10 @@
 ## CS 639 Semester Project - Hand Gesture Recognition
 
-Over the course of the past semester, I have been working to build a Hand Gesture Recognition application. The application uses computer vision techniques learned about over the course of the semester to segment a hand from a webcam stream and make a gesture prediction. Based on the predicted gesture, the application can perform system actions. This web page discusses the motivation, approach, implementation, result and problems encountered while working on the project. Feel free to email me with any questions or concerns at jpholt2@wisc.edu.
+Over the course of the semester, I built a Hand Gesture Recognition application. The application uses computer vision techniques to segment a hand from a webcam stream and make a gesture prediction based on said hand. When a gesture is recognized, the application performs system actions (such as changing the volume). This web page discusses the motivation, approach, implementation, results and problems encountered while working on the project. Feel free to email me with any questions or concerns at jpholt2@wisc.edu.
 
 ### Motivation
 
-The primary reason I choose this topic is because I am interested in how artificial intelligence and computer vision can be used to make computers more accessible to those with disabilities. Many people with disabillities are not able to interact with a computer in the traditional way we expect (ie mouse and keyboard). While the current version of the project only works with common hand gestures, my goal long term is to make the program expandable such that one day those with disabilities will be able to use it.
+The primary reason I choose this topic is because I am interested in how artificial intelligence and computer vision can be used to make computers more accessible to those with disabilities. Many people with disabilities are not able to interact with a computer in the traditional way we expect (ie mouse and keyboard). While the current version of the project only works with common hand gestures, my goal long term is to make the program expandable such that one day those with disabilities will be able to use it.
 
 On top of this, I also picked this topic because I thought it would be a great opportunity to work with a variety of machine learning and computer vision topics we learned about over the course of the semester, including but not limited to:
 
@@ -23,12 +23,12 @@ The computer vision pipeline for approach looks something like this:
 4. Run the user's masked hand through a model trained to classify the gesture on the hand
 5. Interpret the model results and perform an action
 
-The implementation section of this site goes into more detail on how each of these steps works.
+The implementation section of this site goes into more detail on how each step of the approach works.
 
 ### Implementation
 
 #### Primary Application
-The primary applicaiton for my program is a simple desktop application written in Python. On launch, the application starts a webcam stream where it constantly takes inputs from the camera and runs the frames through the computer vision pipeline described bellow. The application also handles the modification of system behavior based on gestures, and provides a glimpse into the behind-the-secnes by showing the segmented image and and the current prediction + accuracy on the screen. 
+The primary applicaiton for my program is a desktop application written in Python. On launch, the application starts a webcam stream where it pulls images from the camera and runs the frames through the computer vision pipeline. The application also handles the modification of system behavior based on gestures, and provides a glimpse into the behind-the-secnes by showing the segmented image and and the current prediction + accuracy on the screen. See the demo linked bellow for a look at the application itself.
 
 #### Image Segmentation
 The image segmentation system has two primary phases: calibration and segmentation.
@@ -36,18 +36,21 @@ The image segmentation system has two primary phases: calibration and segmentati
 **Calibration:**
 During the calibtration phase, the webcam creates a running weighted average of the background frames to later use for separating the forground from the background. I learned about this technique from [this geeksforgeeks article](https://www.geeksforgeeks.org/background-subtraction-in-an-image-using-concept-of-running-average/):
 
+0. Convert each frame to gray scale and apply a Guassian blur
 1. For the first 30 frames, do not segment the images
 2. Add each frame to a running average using `cv2.accumulateWeighted`. Store this for the segmentation step
 
+The idea is that if we can find the differencee/distance between the weighted background and a new frame, we can easily segment the portions of the new frame that are significantly different from the background based, for some definition of significant. 
+
 **Segmentation**
-I initially had alot of trouble segmenting my image forground from the background due to noise and slight movements in the camera (see problems section bellow for more info). After doing more research, I found [this article](https://gogul.dev/software/hand-gesture-recognition-p1) by Gogul Ilango who provided a variety of techniques to overcome this problem. The overview of the final process can be seen bellow. 
+In my initial approach, I had trouble segmenting my image forground from the background due to noise and slight movements in the camera (see problems section bellow for more info). After doing more research, I found [this article](https://gogul.dev/software/hand-gesture-recognition-p1) by Gogul Ilango who provided a variety of techniques to overcome this problem. The overview of the final process can be seen here:
 
 1. For each frame, take the difference of the frame from the weighted background image
-2. Separate the forground and the background using this diff via a threshold mask
+2. Separate the forground and the background using this difference via a threshold mask
 3. Find the different masked areas on this difference using the cv2 contours method
-4. If a countour is found, return the contour with the largest area. This is our hand.
+4. If a countour is found, return the contour with the largest area. This is (ideally) our hand.
 
-This method works but comes with a variety of drawbacks. Most notably, we must keep the camera still and people/limbs out of vision for 30 frames to calibrate the system. Furthermore, the results get significantly worse if the camera is moved. I would like to improve upon this system in the future.
+This method works but comes with a variety of drawbacks. Most notably, we must keep the camera still and people/limbs out of vision for 30 frames to calibrate the system. Furthermore, the results get significantly worse if the camera is moved. I would like to improve upon this system in the future (see future work section bellow).
 
 #### Model / Image Prediction 
 
@@ -71,11 +74,11 @@ These results were not great, with an average accuracy around 42%. The movement 
 ##### Model V2 - Deep Learning + Better Data
 
 **Motivation**
-There weere three primary reasons I decided to scrap my initial model and start from scratch:
+There were three primary reasons I decided to scrap my initial model and start from scratch:
 
 1. My initial model had awful accuracy
-2. I knew there were already reliable, tested models out there pretrained for feature extraction
-3. After reasearching state-of the art techniques (see section bellow), I found that deep learning techniques were particularly well suited for this specific task
+2. I knew there were already reliable, tested models out there pre-trained for feature extraction
+3. After reasearching state-of-the-art techniques (see section bellow), I found that deep learning techniques were particularly well suited for this specific task
 
 **Data**
 I started with the same dataset as before, but made some modifications. The first thing I did was completely remove the data points that were for "moving" gestures. My application is only concerned with static gestures, so these should not have even been included in the first case. The second thing I did was rework how the proprocessing worked:
@@ -90,27 +93,27 @@ I choose to keep the BW images because this would be very similar to the output 
 **Model**
 For my model, I choose to transfer-train the pre-trained torchvision ResNet-18 model. I had used a model similar to this over the summer for a project, and thought it would be a good fit here. Ideally I would have used a deeper ResNet model, but I was heavily compute-bound due to the limited power of my laptop (and it's lack of a cuda-GPU). 
 
-After downloading the model, I frooze the parameters of all the layers except the last. For the last layer, I choose a simple linear fully connected layer mapping the classifier to the 8 potential output classes. Once my model was setup, I began training. Due to my limited compute power, I was only able to train for 25 epochs (which took 25 hours). The model was trained using Stochastic Gradient Descent with momentum, Cross Entropy Loss and a learning rate schedueler. My results on the test set can be seen bellow:
+After downloading the model, I froze the parameters of all the layers except the last. For the last layer, I choose a simple linear fully connected layer mapping the classifier to the 8 potential output classes. Once my model was setup, I began training. Due to my limited compute power, I was only able to train for 25 epochs (which took 25 hours). The model was trained using Stochastic Gradient Descent with momentum, Cross Entropy Loss and a learning rate schedueler. My results on the test set can be seen bellow:
 
 ![v2-results](https://github.com/JoeHolt/HandGestureRecognizer/raw/main/docs/imgs/resnet_acc.png)
 
-As you can see, for nearly every class we had accuracy over 70% and an overall accuracy over 80%. I believe I could have squeezed a little more accuracy out of this model by training for 20-30 more epochs.
+As you can see, for nearly every class we had accuracy over 70% and an overall accuracy of around 77%. I believe I could have squeezed a little more accuracy out of this model by training for 20-30 more epochs.
 
 #### Computer Actions 
-This portion of the project was simply expanding the primary python application I created to be able to utilize my operating system (I am using macOS) actions. I was able to perform computer actions by calling AppleScript scripts from my python function. An given action (ie volume change) was executed if the following condition was met:
+This portion of the project was simply expanding the primary python application I created to be able to utilize my operating system (I am using macOS) actions. I was able to perform computer actions by calling AppleScript scripts from my python application. An given action (ie volume change) was executed if the following condition was met:
 
 - The given gesture was present in 6 of the last 7 predictions (predictions occur every 6 frames)
 
 In the current implementation of the application (that can be seen in the demo), I mapped two different gestures to the volume controls on my computer:
 
-1. L gesture with thumb and pointer: Mute Volume
-2. OK gesture with pointer and thumb in O, rest of fingers up: Turn volume to 75%
+1. L gesture (thumb and pointer extended): Mute Volume
+2. OK gesture (pointer and thumb in O shape, rest of fingers up): Turn volume to 75%
 
 
 ### Results
 I am super happy with how my final product turned out. The application meets all the goals I initially set out to meet, and I learned a ton in the process of creating it. The link bellow provides a demo of the application live in action. While watching, ensure your sound is on and make sure to make note of the following:
 
-- The superimposed box is the "aim" box for where the segmentation tool attempts to find the image
+- The superimposed box is the "aim" box for where the segmentation tool attempts to find the image (note: the actual search area is slightly larger than the box)
 - The superimposed box is red until the segmentation tool finishes calibrating
 - Bottom left corner showcases the 4 predictions and their respective accuracies at any given time (assuming a valid hand is found)
 - The bottom right corner shows the segmented image that is fed to the model (assuming a valid hand is found)
@@ -130,6 +133,7 @@ Going forward there a variety of improvements I would like to make.
 
 **Model**
 There are many modifications to make to the model portion of the project. My most notable curiosities are listed bellow:
+0. I would like to make my final layer of the ResNet-18 model a little more complex. Right now it is just a simple linear layer, but if I were to improve upon this I think I could get a higher accuracy. 
 1. I would like to train the existing model for around 175 more epochs. I will try this once I have access to a GPU or two
 2. I would like to try a deeper resnet model, ie ResNet-152. Again, I will need some compute power first.
 3. I would like to try the [EfficientNet-L2-475 + SAM](https://paperswithcode.com/paper/sharpness-aware-minimization-for-efficiently-1) model, the current ImageNet champion
@@ -139,6 +143,7 @@ There are many modifications to make to the model portion of the project. My mos
 My primary concern motivation for finding a better dataset is that my current dataset only supports gestures from able-bodied individuals, which is not my end goal.
 1. I would like to find a dataset with RGB image from disabled individuals
 2. I would like to survey said individuals for what they would like in an application like mine
+3. I would like to try an acquire a depth sensor so I can work with some of the depth-based datasets (and so I can better segment the frames)
 
 **Image Segmentation**
 The image segmentaiton tool works, but it is not perfect. I would like to make the following improvements (although I am not sure exactly how at this point in time):
@@ -158,7 +163,7 @@ One of the first problems I had was acquiring a good dataset that could work wit
 After refining my search, I eventually found the Kaggle dataset linked above. The dataset was made up of relatively simple 2D, 3 channel jpg images. In hindsight, I likely could have done some data munging with the other datasets to get normal images, but this also likely would have taken a long time. 
 
 #### Model Only Worked with Hands in 1 orientation
-My initial model had a problem where, when the model worked, it only worked in the hands were in a given orientation. I noticed the working orientation was the same orientation as the images in the train set. To aliviate this problem, I added a random rotation to each image in the dataset when processing the dataset, as decribed above. 
+My initial model had a problem where, when the model worked, it only worked in the hands were in a given orientation (ie hand enters webcam image straight up and down). I noticed the working orientation was the same orientation as the images in the train set. To aliviate this problem, I added a random rotation to each image in the dataset when processing the dataset, as decribed above. 
 
 #### Poor Model Accuracy
 The first model I created had very poor accuracy across the training set. To solve this problem I did some more research into state-of-the-art solutions similar to mind from the past, and found that many of them used much more complex models that the simple one I had defined. This is what caused me to go with the deeper ResNet model. This was described above.
